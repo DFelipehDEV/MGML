@@ -1,6 +1,6 @@
 #include "event.hpp"
 
-namespace EXGML {
+namespace MGML {
     Event::Event(const std::string& functionName, const std::string& define) {
         SetFunctionName(functionName);	
         SetDefine(define);

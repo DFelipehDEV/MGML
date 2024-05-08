@@ -1,7 +1,7 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 #include <string>
-namespace EXGML {
+namespace MGML {
     struct Token {
         int type;
         std::string value;

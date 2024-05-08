@@ -1,9 +1,9 @@
 # ModernGML->GML transpiler for GM8.2
 Usage:
-EXGML.exe "Input.exgm" "Output.gml"
+mgml.exe "Input.exgm" "Output.gml"
 
 Example usage
-./EXGML.exe "test.exgm" "Project.gm82\objects\objPlayer.gml"
+./mgml.exe "test.exgm" "Project.gm82\objects\objPlayer.gml"
 
 # todo
 - [x] Events

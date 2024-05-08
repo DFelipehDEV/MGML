@@ -1,7 +1,7 @@
 #ifndef EVENT_HPP
 #define EVENT_HPP
 #include <string>
-namespace EXGML {
+namespace MGML {
     class Event {
         public:
             Event(const std::string& functionName, const std::string& define);

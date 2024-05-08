@@ -4,7 +4,7 @@
 #include <regex>
 #include "event.hpp"
 #include "token.hpp"
-using namespace EXGML;
+using namespace MGML;
 
 int main(int argc, char **argv) {
     std::string inputFilePath, outputFilePath;
