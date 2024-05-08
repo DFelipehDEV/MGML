@@ -4,6 +4,7 @@ project(mgml)
 set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/event.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/log.cpp
 )
 add_executable(mgml ${SOURCE})
 

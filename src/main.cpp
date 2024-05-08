@@ -4,6 +4,7 @@
 #include <regex>
 #include "event.hpp"
 #include "token.hpp"
+#include "log.hpp"
 using namespace MGML;
 
 int main(int argc, char **argv) {
@@ -21,7 +22,7 @@ int main(int argc, char **argv) {
     std::ofstream out(outputFilePath);
     
     if (!inputFile) {
-        std::cerr << "ERROR: Unable to open " << inputFilePath << std::endl;
+        Log::PrintLine("Unable to open " + inputFilePath, LogType::ERROR);
         return 1;
     }
 
@@ -49,10 +50,10 @@ int main(int argc, char **argv) {
     event[Events::GAME_END] = new Event("on_game_end", "\n#define Other_3\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
     event[Events::ROOM_START] = new Event("on_room_start", "\n#define Other_4\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
     event[Events::ROOM_END] = new Event("on_game_end", "\n#define Other_5\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
-    event[Events::NO_LIVES] = new Event("on_no_lives", "\n#define Other_6\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
+    //event[Events::NO_LIVES] = new Event("on_no_lives", "\n#define Other_6\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
     event[Events::ANIMATION_END] = new Event("on_animation_end", "\n#define Other_7\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
     event[Events::PATH_END] = new Event("on_path_end", "\n#define Other_8\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
-    event[Events::NO_HEALTH] = new Event("on_no_health", "\n#define Other_9\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
+    //event[Events::NO_HEALTH] = new Event("on_no_health", "\n#define Other_9\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
     event[Events::USER_0] = new Event("on_user_0", "\n#define Other_10\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
     event[Events::USER_1] = new Event("on_user_1", "\n#define Other_11\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
     event[Events::USER_2] = new Event("on_user_2", "\n#define Other_12\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
@@ -89,7 +90,7 @@ int main(int argc, char **argv) {
 
     std::regex actions[Events::SIZE];
     for (int i = 0; i < Events::SIZE; i++) {
-        actions[i] = std::regex("\\b" + event[i]->GetFunctionName() + "\\(\\)");
+        actions[i] = std::regex("\\bfunction " + event[i]->GetFunctionName() + "\\(\\)");
     }
     out << "#define Create_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/";
     std::regex comment("\\/\\/.*|\\/\\*.*?\\*\\/");
@@ -97,7 +98,7 @@ int main(int argc, char **argv) {
     std::regex decrement("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)");
     std::regex trueTo1("true");
     std::regex falseTo0("false");
-    std::regex types("\\b(function)\\b");
+    //std::regex types("\\b(function)\\b");
     std::string line;
     while (std::getline(inputFile, line)) {
         line = std::regex_replace(line, comment, " ");
@@ -105,17 +106,19 @@ int main(int argc, char **argv) {
         line = std::regex_replace(line, decrement, "$1-=1");
         line = std::regex_replace(line, trueTo1, "1");
         line = std::regex_replace(line, falseTo0, "0");
-        line = std::regex_replace(line, types, "");
+        //line = std::regex_replace(line, types, "");
 
         // Replace functions with actions
         for (int i = 0; i < Events::SIZE; i++) {
             line = std::regex_replace(line, actions[i], event[i]->GetDefine());
         }
+
         out << line << "\n";
     }
 
     out.close();
     inputFile.close();
+    Log::PrintLine("Done...");
 
     for (int i = 0; i < Events::SIZE; i++) {
         delete event[i];
