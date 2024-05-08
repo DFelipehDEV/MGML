@@ -727,6 +727,7 @@ function on_end_step() {
 		}
 	}
 }
+
 function on_draw() {
 	/// Draw character
 

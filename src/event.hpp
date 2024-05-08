@@ -16,7 +16,7 @@ namespace EXGML {
             std::string m_functionName;
 
     };
-    enum EVENTS {
+    enum Events {
         BEGIN_STEP = 0,
         STEP,
         END_STEP,
