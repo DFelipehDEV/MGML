@@ -100,12 +100,13 @@ int main(int argc, char **argv) {
     std::regex falseTo0("false");
     //std::regex types("\\b(function)\\b");
     std::string line;
+    Log::PrintLine("Compiling " + inputFilePath);
     while (std::getline(inputFile, line)) {
         line = std::regex_replace(line, comment, " ");
         line = std::regex_replace(line, increment, "$1+=1");
         line = std::regex_replace(line, decrement, "$1-=1");
-        line = std::regex_replace(line, trueTo1, "1");
-        line = std::regex_replace(line, falseTo0, "0");
+        //line = std::regex_replace(line, trueTo1, "1");
+        //line = std::regex_replace(line, falseTo0, "0");
         //line = std::regex_replace(line, types, "");
 
         // Replace functions with actions
