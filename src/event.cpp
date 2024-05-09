@@ -5,7 +5,7 @@ namespace MGML {
         SetFunctionName(functionName);	
         SetDefine(define);
     }
-    std::string Event::GetDefine() {
+    std::string& Event::GetDefine() {
         return this->m_define;
     }
 
@@ -13,7 +13,7 @@ namespace MGML {
         this->m_define = define;
     }
 
-    std::string Event::GetFunctionName() {
+    std::string& Event::GetFunctionName() {
         return this->m_functionName;
     }
 

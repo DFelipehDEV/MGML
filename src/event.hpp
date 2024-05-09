@@ -7,9 +7,9 @@ namespace MGML {
             Event(const std::string& functionName, const std::string& define);
             ~Event() = default;
 
-            std::string GetDefine();
+            std::string& GetDefine();
             void SetDefine(const std::string& define);
-            std::string GetFunctionName();
+            std::string& GetFunctionName();
             void SetFunctionName(const std::string& name);
         private:
             std::string m_define;
@@ -40,10 +40,10 @@ namespace MGML {
         GAME_END,
         ROOM_START,
         ROOM_END,
-        //NO_LIVES,
+        NO_LIVES,
         ANIMATION_END,
         PATH_END,
-        //NO_HEALTH,
+        NO_HEALTH,
         USER_0,
         USER_1,
         USER_2,
