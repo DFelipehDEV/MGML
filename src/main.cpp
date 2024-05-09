@@ -13,7 +13,7 @@ using namespace MGML;
 int main(int argc, char **argv) {
     std::string inputFilePath, outputFilePath;
     if (argc < 3) {
-        Log::PrintLine("Arguments not provided, using default paths...");
+        Log::PrintLine("Arguments not provided, using default paths...", LogType::WARNING);
         inputFilePath = "../../test.exgm";
         outputFilePath = "C://Users//thedi//Dev//Astral-Engine-Gaia//src//AstralEngine82.gm82//objects//objPlayer.gml";
     } else {
