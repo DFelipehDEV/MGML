@@ -7,6 +7,7 @@
 #include "token.hpp"
 #include "log.hpp"
 #include "transpiler.hpp"
+#include "file.hpp"
 using namespace MGML;
 
 int main(int argc, char **argv) {
@@ -20,25 +21,30 @@ int main(int argc, char **argv) {
         outputFilePath = argv[2];
     }
 
-    std::ifstream* inputFile = new std::ifstream(inputFilePath);
-    std::ofstream* outputFile = new std::ofstream(outputFilePath);
+    InputFile inputFile;
+    inputFile.file = new std::ifstream(inputFilePath);
+    inputFile.path = inputFilePath;
+    OutputFile outputFile;
+    outputFile.file = new std::ofstream(outputFilePath);
+    outputFile.path = outputFilePath;
     
-    if (!inputFile) {
+    if (!inputFile.file->good()) {
         Log::PrintLine("Unable to open input " + inputFilePath, LogType::ERROR);
         return 1;
     }
 
-    if (!outputFile->good()) {
+    if (!outputFile.file->good()) {
         Log::PrintLine("Unable to open output " + outputFilePath, LogType::ERROR);
         return 1;
     }
 
     Transpiler transpiler;
-    transpiler.Execute(inputFile, outputFile);
+    transpiler.Execute(inputFile.file, outputFile.file);
 
     Log::PrintLine("Done...");
-    delete inputFile;
-    delete outputFile;
+    //TODO: Move to File destructor 
+    delete inputFile.file;
+    delete outputFile.file;
 
     return 0;
 }
