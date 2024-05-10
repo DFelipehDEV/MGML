@@ -17,6 +17,8 @@ namespace MGML {
         RPAREN,
         LBRACE,
         RBRACE,
+        SEPERATOR, 
+        DELIMITER,
         EOL,
     };
 }

@@ -7,8 +7,10 @@ namespace MGML {
         "break", 
         "exit", 
         "var", 
+        "global",
         "while", 
-        "for", 
+        "for",
+        "do", 
         "return", 
         "with",
         "self",
@@ -20,7 +22,7 @@ namespace MGML {
     };
 
     const std::unordered_set<std::string> Language::operators = {
-        "+", "-", "*", "/", "=", "==", "!=", "<", ">", "<=", ">=", "&&", "||", "!", "[", "]",
+        "==", "!=", "<=", ">=", "&&", "<", ">", "||", "+", "-", "*", "/", "=", "!", "[", "]",
     };
 
     bool Language::IsKeyword(const std::string& str) {

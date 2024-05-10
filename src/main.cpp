@@ -45,6 +45,6 @@ void TranspileFile(const std::filesystem::path& inputFilePath) {
     std::ifstream inputFile(inputFilePath);
     std::stringstream buffer;
     buffer << inputFile.rdbuf();
-    //transpiler.Tokenize(buffer.str());
-    transpiler.Execute(inputFilePath.string(), outputFilePath.string());
+    transpiler.Tokenize(buffer.str());
+    //transpiler.Execute(inputFilePath.string(), outputFilePath.string());
 }

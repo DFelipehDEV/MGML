@@ -81,7 +81,7 @@ namespace MGML {
                 }
                 continue;
             }
-            
+
             // Check for negative numbers
             if (word == "-" && std::isdigit(peek)) {
                 while (index + 1 < code.size() && (std::isdigit(code[index + 1]) || code[index + 1] == '.')) {
@@ -126,8 +126,20 @@ namespace MGML {
                 continue;
             }
 
-            if (Language::IsOperator(word)) {
+            if (Language::IsOperator(word) && peek != '=') {
                 tokens.push_back({ TokenType::OPERATOR, word });
+                word = "";
+                continue;
+            }
+
+            if (word == "," ) {
+                tokens.push_back({ TokenType::DELIMITER, "," });
+                word = "";
+                continue;
+            }
+
+            if (word == "." ) {
+                tokens.push_back({ TokenType::SEPERATOR, "." });
                 word = "";
                 continue;
             }
@@ -172,6 +184,12 @@ namespace MGML {
                     break;
                 case TokenType::STRING:
                     Log::PrintLine("String " + token.value);
+                    break;
+                case TokenType::DELIMITER:
+                    Log::PrintLine("Delimiter " + token.value);
+                    break;
+                case TokenType::SEPERATOR:
+                    Log::PrintLine("Seperator " + token.value);
                     break;
             }
         }
