@@ -2,6 +2,7 @@
 #include <regex>
 #include "log.hpp"
 #include <sstream>
+#include <chrono>
 namespace MGML {
     Event* Transpiler::event[Events::SIZE] = { nullptr };
     Transpiler::Transpiler() {
@@ -14,7 +15,20 @@ namespace MGML {
         //m_file->close();
     }
 
-    void Transpiler::Execute(std::ifstream* inputFile, std::ofstream* outputFile) {
+    void Transpiler::Execute(std::string inputPath, std::string outputPath) {
+        auto startTime = std::chrono::high_resolution_clock::now(); 
+        std::ifstream inputFile(inputPath);
+        std::ofstream outputFile(outputPath);
+        if (!inputFile.good()) {
+            Log::PrintLine("Unable to open input " + inputPath, LogType::ERROR);
+            return;
+        }
+
+        if (!outputFile.good()) {
+            Log::PrintLine("Unable to open output " + outputPath, LogType::ERROR);
+            return;
+        }
+
         std::regex actions[Events::SIZE];
         for (int i = 0; i < Events::SIZE; i++) {
             actions[i] = std::basic_regex("\\bfunction " + event[i]->GetFunctionName() + "\\(\\)");
@@ -27,12 +41,12 @@ namespace MGML {
         //std::regex types("\\b(function)\\b");
 
         std::stringstream buffer;
-        *outputFile << "#define Create_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/";
-        buffer << inputFile->rdbuf();
+        outputFile << "#define Create_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/";
+        buffer << inputFile.rdbuf();
         std::string modifiedBuffer = buffer.str();
 
         
-        modifiedBuffer = std::regex_replace(modifiedBuffer, comment, " ");
+        modifiedBuffer = std::regex_replace(modifiedBuffer, comment, "");
         modifiedBuffer = std::regex_replace(modifiedBuffer, increment, "$1+=1");
         modifiedBuffer = std::regex_replace(modifiedBuffer, decrement, "$1-=1");
 
@@ -40,10 +54,14 @@ namespace MGML {
             modifiedBuffer = std::regex_replace(modifiedBuffer, actions[i], event[i]->GetDefine());
         }
 
-        *outputFile << modifiedBuffer;
+        outputFile << modifiedBuffer;
 
-        outputFile->close();
-        inputFile->close();
+        outputFile.close();
+        inputFile.close();
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+
+        Log::PrintLine(inputPath + " took " + std::to_string(duration.count()) + "ms");
     }
     
     void Transpiler::InitializeEvent() {

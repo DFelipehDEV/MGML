@@ -3,6 +3,7 @@
 #include <iostream> 
 #include <regex>
 #include <sstream>
+#include <filesystem>
 #include "event.hpp"
 #include "token.hpp"
 #include "log.hpp"
@@ -11,40 +12,20 @@
 using namespace MGML;
 
 int main(int argc, char **argv) {
-    std::string inputFilePath, outputFilePath;
-    if (argc < 3) {
+    std::filesystem::path inputFilePath, outputFilePath;
+    if (argc < 2) {
         Log::PrintLine("Arguments not provided, using default paths...", LogType::WARNING);
         inputFilePath = "../../test.exgm";
-        outputFilePath = "C://Users//thedi//Dev//Astral-Engine-Gaia//src//AstralEngine82.gm82//objects//objPlayer.gml";
     } else {
         inputFilePath = argv[1];
-        outputFilePath = argv[2];
     }
-
-    InputFile inputFile;
-    inputFile.file = new std::ifstream(inputFilePath);
-    inputFile.path = inputFilePath;
-    OutputFile outputFile;
-    outputFile.file = new std::ofstream(outputFilePath);
-    outputFile.path = outputFilePath;
-    
-    if (!inputFile.file->good()) {
-        Log::PrintLine("Unable to open input " + inputFilePath, LogType::ERROR);
-        return 1;
-    }
-
-    if (!outputFile.file->good()) {
-        Log::PrintLine("Unable to open output " + outputFilePath, LogType::ERROR);
-        return 1;
-    }
+    outputFilePath = inputFilePath;
+    outputFilePath.replace_extension(".gml");
 
     Transpiler transpiler;
-    transpiler.Execute(inputFile.file, outputFile.file);
+    transpiler.Execute(inputFilePath.string(), outputFilePath.string());
 
     Log::PrintLine("Done...");
-    //TODO: Move to File destructor 
-    delete inputFile.file;
-    delete outputFile.file;
 
     return 0;
 }
