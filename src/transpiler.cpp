@@ -12,22 +12,13 @@ namespace MGML {
     }
 
     Transpiler::~Transpiler() {
-        //m_file->close();
+
     }
 
     void Transpiler::Execute(std::string inputPath, std::string outputPath) {
         auto startTime = std::chrono::high_resolution_clock::now(); 
         std::ifstream inputFile(inputPath);
         std::ofstream outputFile(outputPath);
-        if (!inputFile.good()) {
-            Log::PrintLine("Unable to open input " + inputPath, LogType::ERROR);
-            return;
-        }
-
-        if (!outputFile.good()) {
-            Log::PrintLine("Unable to open output " + outputPath, LogType::ERROR);
-            return;
-        }
 
         std::regex actions[Events::SIZE];
         for (int i = 0; i < Events::SIZE; i++) {

@@ -14,6 +14,7 @@ namespace MGML {
 
         void Execute(std::string inputPath, std::string outputPath);
         static Event* event[Events::SIZE];
+
     private:
         std::string m_filePath;
     };

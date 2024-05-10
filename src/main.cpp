@@ -4,28 +4,43 @@
 #include <regex>
 #include <sstream>
 #include <filesystem>
+#include <thread>
 #include "event.hpp"
 #include "token.hpp"
 #include "log.hpp"
 #include "transpiler.hpp"
-#include "file.hpp"
 using namespace MGML;
 
+void TranspileFile(const std::filesystem::path& inputFilePath);
+
 int main(int argc, char **argv) {
-    std::filesystem::path inputFilePath, outputFilePath;
-    if (argc < 2) {
-        Log::PrintLine("Arguments not provided, using default paths...", LogType::WARNING);
-        inputFilePath = "../../test.exgm";
-    } else {
-        inputFilePath = argv[1];
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < argc; i++) {
+        std::filesystem::path inputFilePath;
+
+        if (argc < 2) {
+            Log::PrintLine("Arguments not provided, using default paths...", LogType::WARNING);
+            inputFilePath = "../../test.exgm";
+        } else {
+            if (i > 0) inputFilePath = argv[i];
+        }
+
+        threads.emplace_back(TranspileFile, inputFilePath);
     }
-    outputFilePath = inputFilePath;
+
+    for (std::thread& thread : threads) {
+        thread.join();
+    }
+
+    Log::PrintLine("Done...");
+    return 0;
+}
+
+void TranspileFile(const std::filesystem::path& inputFilePath) {
+    std::filesystem::path outputFilePath = inputFilePath;
     outputFilePath.replace_extension(".gml");
 
     Transpiler transpiler;
     transpiler.Execute(inputFilePath.string(), outputFilePath.string());
-
-    Log::PrintLine("Done...");
-
-    return 0;
 }
