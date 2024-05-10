@@ -1,11 +1,18 @@
-#include "transpiler.hpp"
 #include <regex>
-#include "log.hpp"
 #include <sstream>
 #include <chrono>
-namespace MGML {
+#include <cctype>
+#include <unordered_set>
+#include <iostream>
+#include "transpiler.hpp"
+#include "language.hpp"
+#include "log.hpp"
+
+namespace MGML {    
     Event* Transpiler::event[Events::SIZE] = { nullptr };
-    Transpiler::Transpiler() {
+    Transpiler::Transpiler() : commentRegex("\\/\\/.*|\\/\\*.*?\\*\\/"), 
+    incrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\+\\+|\\+\\+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    decrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)"){
         if (Transpiler::event[Events::SIZE] == nullptr) {
             InitializeEvent();
         }
@@ -24,22 +31,15 @@ namespace MGML {
         for (int i = 0; i < Events::SIZE; i++) {
             actions[i] = std::basic_regex("\\bfunction " + event[i]->GetFunctionName() + "\\(\\)");
         }
-        std::basic_regex comment("\\/\\/.*|\\/\\*.*?\\*\\/");
-        std::basic_regex increment("([a-zA-Z_][a-zA-Z0-9_]*)\\+\\+|\\+\\+([a-zA-Z_][a-zA-Z0-9_]*)");
-        std::basic_regex decrement("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)");
-        std::basic_regex trueTo1("true");
-        std::basic_regex falseTo0("false");
-        //std::regex types("\\b(function)\\b");
 
         std::stringstream buffer;
-        outputFile << "#define Create_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/";
+        buffer << "#define Create_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/";
         buffer << inputFile.rdbuf();
         std::string modifiedBuffer = buffer.str();
-
         
-        modifiedBuffer = std::regex_replace(modifiedBuffer, comment, "");
-        modifiedBuffer = std::regex_replace(modifiedBuffer, increment, "$1+=1");
-        modifiedBuffer = std::regex_replace(modifiedBuffer, decrement, "$1-=1");
+        modifiedBuffer = std::regex_replace(modifiedBuffer, commentRegex, "");
+        modifiedBuffer = std::regex_replace(modifiedBuffer, incrementRegex, "$1+=1");
+        modifiedBuffer = std::regex_replace(modifiedBuffer, decrementRegex, "$1-=1");
 
         for (int i = 0; i < Events::SIZE; i++) {
             modifiedBuffer = std::regex_replace(modifiedBuffer, actions[i], event[i]->GetDefine());
@@ -55,6 +55,128 @@ namespace MGML {
         Log::PrintLine(inputPath + " took " + std::to_string(duration.count()) + "ms");
     }
     
+    void Transpiler::Tokenize(std::string code) {
+        code = std::regex_replace(code, commentRegex, "");
+        std::string word = "";
+
+        bool insideString = false;
+        for (int index = 0; index < code.size(); index++) {
+            if (std::isspace(code[index]) && !insideString) {
+                continue;
+            }
+
+            word += code[index];
+
+            char peek = index + 1 < code.size() ? code[index + 1] : '\0';
+            
+            if (code[index] == '"') {
+                if (insideString) {
+                    // End of string, add to tokens
+                    tokens.push_back({ TokenType::STRING, word });
+                    word = "";
+                    insideString = false;
+                } else {
+                    // Start of string, set flag
+                    insideString = true;
+                }
+                continue;
+            }
+            
+            // Check for negative numbers
+            if (word == "-" && std::isdigit(peek)) {
+                while (index + 1 < code.size() && (std::isdigit(code[index + 1]) || code[index + 1] == '.')) {
+                    word += code[index + 1];
+                    index++;
+                }
+                tokens.push_back({ TokenType::NUMBER, word });
+                word = "";
+                continue;
+            }
+
+            if (std::isdigit(word[0]) && !std::isdigit(peek)) {
+                if (peek != '.') {
+                    tokens.push_back({ TokenType::NUMBER, word });
+                    word = "";
+                    continue;
+                }
+            }
+
+            if (word == "(" || word == ")") {
+                tokens.push_back({ (word == "(") ? TokenType::LPAREN : TokenType::RPAREN });
+                word = "";
+                continue;
+            }
+
+            if (word == "{") {
+                tokens.push_back({ TokenType::LBRACE });
+                word = "";
+                continue;
+            }
+
+            if (word == "}") {
+                tokens.push_back({ TokenType::RBRACE });
+                word = "";
+                continue;
+            }
+
+            if ((std::isalpha(word[0])) && (!std::isalnum(peek)) && peek != '_') {
+                int type = (Language::IsKeyword(word)) ? TokenType::KEYWORD : TokenType::IDENTIFIER;
+                tokens.push_back({ type, word });
+                word = "";
+                continue;
+            }
+
+            if (Language::IsOperator(word)) {
+                tokens.push_back({ TokenType::OPERATOR, word });
+                word = "";
+                continue;
+            }
+
+            if (word == ";" || word == "\n") {
+                tokens.push_back({ TokenType::EOL });
+                word = "";
+                continue;
+            }
+        }
+
+        tokens.push_back({ TokenType::EOL });
+
+        for (Token token : tokens) {
+            switch (token.type) {
+                case TokenType::KEYWORD:
+                    Log::PrintLine("Keyword " + token.value);
+                    break;
+                case TokenType::NUMBER:
+                    Log::PrintLine("Number " + token.value);
+                    break;
+                case TokenType::EOL:
+                    Log::PrintLine("EOF " + token.value);
+                    break;
+                case TokenType::IDENTIFIER:
+                    Log::PrintLine("Identifier " + token.value);
+                    break;
+                case TokenType::OPERATOR:
+                    Log::PrintLine("Operator " + token.value);
+                    break;
+                case TokenType::LBRACE:
+                    Log::PrintLine("LBrace " + token.value);
+                    break;
+                case TokenType::RBRACE:
+                    Log::PrintLine("RBrace " + token.value);
+                    break;
+                case TokenType::LPAREN:
+                    Log::PrintLine("LParent " + token.value);
+                    break;
+                case TokenType::RPAREN:
+                    Log::PrintLine("RParent " + token.value);
+                    break;
+                case TokenType::STRING:
+                    Log::PrintLine("String " + token.value);
+                    break;
+            }
+        }
+    }
+
     void Transpiler::InitializeEvent() {
         event[Events::BEGIN_STEP] = new Event("on_begin_step", "\n#define Step_1\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
         event[Events::STEP] = new Event("on_step", "\n#define Step_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");

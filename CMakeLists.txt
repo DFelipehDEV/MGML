@@ -6,6 +6,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/event.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/transpiler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/language.cpp
 )
 add_executable(mgml ${SOURCE})
 if(NOT CMAKE_BUILD_TYPE)

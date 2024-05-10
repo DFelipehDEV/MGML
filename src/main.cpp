@@ -42,5 +42,9 @@ void TranspileFile(const std::filesystem::path& inputFilePath) {
     outputFilePath.replace_extension(".gml");
 
     Transpiler transpiler;
+    std::ifstream inputFile(inputFilePath);
+    std::stringstream buffer;
+    buffer << inputFile.rdbuf();
+    //transpiler.Tokenize(buffer.str());
     transpiler.Execute(inputFilePath.string(), outputFilePath.string());
 }

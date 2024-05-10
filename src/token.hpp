@@ -10,6 +10,14 @@ namespace MGML {
     enum TokenType {
         KEYWORD = 0,
         OPERATOR,
+        NUMBER,
+        STRING,
+        IDENTIFIER,
+        LPAREN,
+        RPAREN,
+        LBRACE,
+        RBRACE,
+        EOL,
     };
 }
 #endif // TOKEN_HPP
