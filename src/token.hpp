@@ -2,11 +2,6 @@
 #define TOKEN_HPP
 #include <string>
 namespace MGML {
-    struct Token {
-        int type;
-        std::string value;
-    };
-
     enum TokenType {
         KEYWORD = 0,
         OPERATOR,
@@ -20,6 +15,10 @@ namespace MGML {
         SEPERATOR, 
         DELIMITER,
         EOL,
+    };
+    struct Token {
+        TokenType type;
+        std::string value;
     };
 }
 #endif // TOKEN_HPP

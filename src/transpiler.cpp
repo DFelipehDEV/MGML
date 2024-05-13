@@ -25,6 +25,13 @@ namespace MGML {
     void Transpiler::Execute(std::string inputPath, std::string outputPath) {
         auto startTime = std::chrono::high_resolution_clock::now(); 
         std::ifstream inputFile(inputPath);
+        std::stringstream inputBuffer;
+        inputBuffer << inputFile.rdbuf();
+        inputBuffer << "\n";
+        if (Tokenize(inputBuffer.str()) == 0) { 
+            return;
+        }
+        
         std::ofstream outputFile(outputPath);
 
         std::regex actions[Events::SIZE];
@@ -34,7 +41,7 @@ namespace MGML {
 
         std::stringstream buffer;
         buffer << "#define Create_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/";
-        buffer << inputFile.rdbuf();
+        buffer << inputBuffer.str();
         std::string modifiedBuffer = buffer.str();
         
         modifiedBuffer = std::regex_replace(modifiedBuffer, commentRegex, "");
@@ -55,13 +62,19 @@ namespace MGML {
         Log::PrintLine(inputPath + " took " + std::to_string(duration.count()) + "ms");
     }
     
-    void Transpiler::Tokenize(std::string code) {
+    int Transpiler::Tokenize(std::string code) {
+        
         code = std::regex_replace(code, commentRegex, "");
         std::string word = "";
+        int currentLine = 1;
 
         bool insideString = false;
+        Token previousToken;
         for (int index = 0; index < code.size(); index++) {
             if (std::isspace(code[index]) && !insideString) {
+                if (code[index] == '\n') {
+                    currentLine++;
+                }
                 continue;
             }
 
@@ -72,7 +85,8 @@ namespace MGML {
             if (code[index] == '"') {
                 if (insideString) {
                     // End of string, add to tokens
-                    tokens.push_back({ TokenType::STRING, word });
+                    previousToken = { TokenType::STRING, word };
+                    tokens.push_back(previousToken);
                     word = "";
                     insideString = false;
                 } else {
@@ -88,64 +102,94 @@ namespace MGML {
                     word += code[index + 1];
                     index++;
                 }
-                tokens.push_back({ TokenType::NUMBER, word });
+                previousToken = { TokenType::NUMBER, word };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if (std::isdigit(word[0]) && !std::isdigit(peek)) {
                 if (peek != '.') {
-                    tokens.push_back({ TokenType::NUMBER, word });
+                    previousToken = { TokenType::NUMBER, word };
+                    tokens.push_back(previousToken);
                     word = "";
                     continue;
                 }
             }
 
             if (word == "(" || word == ")") {
-                tokens.push_back({ (word == "(") ? TokenType::LPAREN : TokenType::RPAREN });
+                previousToken = { (word == "(") ? TokenType::LPAREN : TokenType::RPAREN };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if (word == "{") {
-                tokens.push_back({ TokenType::LBRACE });
+                previousToken = { TokenType::LBRACE };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if (word == "}") {
-                tokens.push_back({ TokenType::RBRACE });
+                previousToken = { TokenType::RBRACE };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if ((std::isalpha(word[0])) && (!std::isalnum(peek)) && peek != '_') {
-                int type = (Language::IsKeyword(word)) ? TokenType::KEYWORD : TokenType::IDENTIFIER;
-                tokens.push_back({ type, word });
+                TokenType type = (Language::IsKeyword(word)) ? TokenType::KEYWORD : TokenType::IDENTIFIER;
+                previousToken = { type, word };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if (Language::IsOperator(word) && peek != '=') {
-                tokens.push_back({ TokenType::OPERATOR, word });
+                previousToken = { TokenType::OPERATOR, word };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if (word == "," ) {
-                tokens.push_back({ TokenType::DELIMITER, "," });
+                switch (previousToken.type) {
+                    case TokenType::DELIMITER:
+                    case TokenType::LBRACE:
+                        Log::PrintLine(previousToken.value +  " is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                        return 0;
+                        break;
+
+                }
+                previousToken = { TokenType::DELIMITER, "," };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if (word == "." ) {
-                tokens.push_back({ TokenType::SEPERATOR, "." });
+                switch (previousToken.type) {
+                    case TokenType::DELIMITER:
+                        Log::PrintLine(previousToken.value + " is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                        return 0;
+                        break;
+                }
+                previousToken = { TokenType::SEPERATOR, "." };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
 
             if (word == ";" || word == "\n") {
-                tokens.push_back({ TokenType::EOL });
+                switch (previousToken.type) {
+                    case TokenType::OPERATOR:
+                        Log::PrintLine(previousToken.value + " is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                        return 0;
+                        break;
+                }
+                previousToken = { TokenType::EOL };
+                tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
@@ -193,6 +237,7 @@ namespace MGML {
                     break;
             }
         }
+        return 1;
     }
 
     void Transpiler::InitializeEvent() {

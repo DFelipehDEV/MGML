@@ -20,20 +20,18 @@ int main(int argc, char **argv) {
         std::filesystem::path inputFilePath;
 
         if (argc < 2) {
-            Log::PrintLine("Arguments not provided, using default paths...", LogType::WARNING);
             inputFilePath = "../../test.exgm";
+            Log::PrintLine("Arguments not provided, using " + inputFilePath.string(), LogType::WARNING);
         } else {
             if (i > 0) inputFilePath = argv[i];
         }
 
-        threads.emplace_back(TranspileFile, inputFilePath);
+        if (i > 0) threads.emplace_back(TranspileFile, inputFilePath);
     }
 
     for (std::thread& thread : threads) {
         thread.join();
     }
-
-    Log::PrintLine("Done...");
     return 0;
 }
 
@@ -45,6 +43,5 @@ void TranspileFile(const std::filesystem::path& inputFilePath) {
     std::ifstream inputFile(inputFilePath);
     std::stringstream buffer;
     buffer << inputFile.rdbuf();
-    transpiler.Tokenize(buffer.str());
-    //transpiler.Execute(inputFilePath.string(), outputFilePath.string());
+    transpiler.Execute(inputFilePath.string(), outputFilePath.string());
 }

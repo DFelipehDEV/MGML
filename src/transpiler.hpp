@@ -12,7 +12,7 @@ namespace MGML {
         ~Transpiler();
         Event* GetEvent() const;
         void InitializeEvent();
-        void Tokenize(const std::string code);
+        int Tokenize(const std::string code);
 
         void Execute(std::string inputPath, std::string outputPath);
         static Event* event[Events::SIZE];
