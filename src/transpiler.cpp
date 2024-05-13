@@ -13,7 +13,8 @@ namespace MGML {
     Transpiler::Transpiler() : commentRegex("\\/\\/.*|\\/\\*.*?\\*\\/"), 
     incrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\+\\+|\\+\\+([a-zA-Z_][a-zA-Z0-9_]*)"),
     decrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)"){
-        if (Transpiler::event[Events::SIZE] == nullptr) {
+        // if (Transpiler::event[Events::SIZE] == nullptr)
+        {
             InitializeEvent();
         }
     }
@@ -25,13 +26,16 @@ namespace MGML {
     void Transpiler::Execute(std::string inputPath, std::string outputPath) {
         auto startTime = std::chrono::high_resolution_clock::now(); 
         std::ifstream inputFile(inputPath);
+        if (!inputFile.good()) {
+            Log::PrintLine("Couldn't find " + inputPath, LogType::ERROR);
+            return;
+        } 
         std::stringstream inputBuffer;
         inputBuffer << inputFile.rdbuf();
         inputBuffer << "\n";
         if (Tokenize(inputBuffer.str()) == 0) { 
             return;
         }
-        
         std::ofstream outputFile(outputPath);
 
         std::regex actions[Events::SIZE];
@@ -63,7 +67,6 @@ namespace MGML {
     }
     
     int Transpiler::Tokenize(std::string code) {
-        
         code = std::regex_replace(code, commentRegex, "");
         std::string word = "";
         int currentLine = 1;
@@ -196,47 +199,6 @@ namespace MGML {
         }
 
         tokens.push_back({ TokenType::EOL });
-
-        for (Token token : tokens) {
-            switch (token.type) {
-                case TokenType::KEYWORD:
-                    Log::PrintLine("Keyword " + token.value);
-                    break;
-                case TokenType::NUMBER:
-                    Log::PrintLine("Number " + token.value);
-                    break;
-                case TokenType::EOL:
-                    Log::PrintLine("EOF " + token.value);
-                    break;
-                case TokenType::IDENTIFIER:
-                    Log::PrintLine("Identifier " + token.value);
-                    break;
-                case TokenType::OPERATOR:
-                    Log::PrintLine("Operator " + token.value);
-                    break;
-                case TokenType::LBRACE:
-                    Log::PrintLine("LBrace " + token.value);
-                    break;
-                case TokenType::RBRACE:
-                    Log::PrintLine("RBrace " + token.value);
-                    break;
-                case TokenType::LPAREN:
-                    Log::PrintLine("LParent " + token.value);
-                    break;
-                case TokenType::RPAREN:
-                    Log::PrintLine("RParent " + token.value);
-                    break;
-                case TokenType::STRING:
-                    Log::PrintLine("String " + token.value);
-                    break;
-                case TokenType::DELIMITER:
-                    Log::PrintLine("Delimiter " + token.value);
-                    break;
-                case TokenType::SEPERATOR:
-                    Log::PrintLine("Seperator " + token.value);
-                    break;
-            }
-        }
         return 1;
     }
 

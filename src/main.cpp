@@ -13,20 +13,19 @@ using namespace MGML;
 
 void TranspileFile(const std::filesystem::path& inputFilePath);
 
-int main(int argc, char **argv) {
+int main(int argc, char* argv[]) {
     std::vector<std::thread> threads;
 
-    for (int i = 0; i < argc; i++) {
-        std::filesystem::path inputFilePath;
-
-        if (argc < 2) {
-            inputFilePath = "../../test.exgm";
-            Log::PrintLine("Arguments not provided, using " + inputFilePath.string(), LogType::WARNING);
-        } else {
-            if (i > 0) inputFilePath = argv[i];
+    std::filesystem::path inputFilePath = "";
+    if (argc == 1) {
+        inputFilePath = std::filesystem::current_path() / "examples/example.mgml";
+        Log::PrintLine("Arguments not provided, using " + inputFilePath.string(), LogType::WARNING);
+        threads.emplace_back(TranspileFile, inputFilePath);
+    } else {
+        for (int i = 1; i < argc; i++) {
+            inputFilePath = argv[i];
+            threads.emplace_back(TranspileFile, inputFilePath);
         }
-
-        if (i > 0) threads.emplace_back(TranspileFile, inputFilePath);
     }
 
     for (std::thread& thread : threads) {
@@ -36,11 +35,15 @@ int main(int argc, char **argv) {
 }
 
 void TranspileFile(const std::filesystem::path& inputFilePath) {
+    std::ifstream inputFile(inputFilePath);
+    if (!inputFile.good()) {
+        Log::PrintLine("Couldn't find " + inputFilePath.string(), LogType::ERROR);
+        return;
+    } 
     std::filesystem::path outputFilePath = inputFilePath;
     outputFilePath.replace_extension(".gml");
 
     Transpiler transpiler;
-    std::ifstream inputFile(inputFilePath);
     std::stringstream buffer;
     buffer << inputFile.rdbuf();
     transpiler.Execute(inputFilePath.string(), outputFilePath.string());
