@@ -68,6 +68,8 @@ namespace MGML {
     
     int Transpiler::Tokenize(std::string code) {
         code = std::regex_replace(code, commentRegex, "");
+        code = std::regex_replace(code, incrementRegex, "$1+=1");
+        code = std::regex_replace(code, decrementRegex, "$1-=1");
         std::string word = "";
         int currentLine = 1;
 
