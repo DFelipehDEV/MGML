@@ -19,11 +19,7 @@ namespace MGML {
         }
     }
 
-    Transpiler::~Transpiler() {
-
-    }
-
-    void Transpiler::Execute(std::string inputPath, std::string outputPath) {
+    void Transpiler::Execute(const std::string& inputPath, const std::string& outputPath) {
         auto startTime = std::chrono::high_resolution_clock::now(); 
         std::ifstream inputFile(inputPath);
         if (!inputFile.good()) {
@@ -33,7 +29,7 @@ namespace MGML {
         std::stringstream inputBuffer;
         inputBuffer << inputFile.rdbuf();
         inputBuffer << "\n";
-        if (Tokenize(inputBuffer.str()) == 0) { 
+        if (FormatAndTokenize(inputBuffer.str()) == 0) { 
             return;
         }
         std::ofstream outputFile(outputPath);
@@ -48,9 +44,7 @@ namespace MGML {
         buffer << inputBuffer.str();
         std::string modifiedBuffer = buffer.str();
         
-        modifiedBuffer = std::regex_replace(modifiedBuffer, commentRegex, "");
-        modifiedBuffer = std::regex_replace(modifiedBuffer, incrementRegex, "$1+=1");
-        modifiedBuffer = std::regex_replace(modifiedBuffer, decrementRegex, "$1-=1");
+        Format(modifiedBuffer);
 
         for (int i = 0; i < Events::SIZE; i++) {
             modifiedBuffer = std::regex_replace(modifiedBuffer, actions[i], event[i]->GetDefine());
@@ -66,10 +60,13 @@ namespace MGML {
         Log::PrintLine(inputPath + " took " + std::to_string(duration.count()) + "ms");
     }
     
-    int Transpiler::Tokenize(std::string code) {
+    void Transpiler::Format(std::string& code) const {
         code = std::regex_replace(code, commentRegex, "");
         code = std::regex_replace(code, incrementRegex, "$1+=1");
         code = std::regex_replace(code, decrementRegex, "$1-=1");
+    }
+
+    int Transpiler::Tokenize(const std::string code) {
         std::string word = "";
         int currentLine = 1;
 
@@ -202,6 +199,11 @@ namespace MGML {
 
         tokens.push_back({ TokenType::EOL });
         return 1;
+    }
+
+    int Transpiler::FormatAndTokenize(std::string code) {
+        Format(code);
+        return Tokenize(code);
     }
 
     void Transpiler::InitializeEvent() {

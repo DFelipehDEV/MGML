@@ -16,6 +16,7 @@ namespace MGML {
         DELIMITER,
         EOL,
     };
+    
     struct Token {
         TokenType type;
         std::string value;

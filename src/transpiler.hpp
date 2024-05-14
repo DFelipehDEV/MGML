@@ -9,21 +9,22 @@ namespace MGML {
     class Transpiler {
     public:
         Transpiler();
-        ~Transpiler();
+        ~Transpiler() = default;
         Event* GetEvent() const;
         void InitializeEvent();
+        void Format(std::string& code) const;
         int Tokenize(const std::string code);
+        int FormatAndTokenize(std::string code);
 
-        void Execute(std::string inputPath, std::string outputPath);
+        void Execute(const std::string& inputPath, const std::string& outputPath);
         static Event* event[Events::SIZE];
 
-        std::regex commentRegex;
-        std::regex incrementRegex;
-        std::regex decrementRegex;
+        const std::regex commentRegex;
+        const std::regex incrementRegex;
+        const std::regex decrementRegex;
         //std::regex types("\\b(function)\\b");
 
     private:
-        std::string m_filePath;
         std::vector<Token> tokens;
     };
 }
