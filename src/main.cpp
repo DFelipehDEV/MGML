@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
         Transpiler transpiler;
         std::stringstream buffer;
         buffer << inputFile.rdbuf();
-        transpiler.Execute(inputFilePath.string(), outputFilePath.string());
+        transpiler.Compile(inputFilePath.string(), outputFilePath.string());
     };
 
 
