@@ -177,7 +177,7 @@ namespace MGML {
                         return 0;
                         break;
                 }
-                previousToken = { TokenType::SEPERATOR, "." };
+                previousToken = { TokenType::DOT, "." };
                 tokens.push_back(previousToken);
                 word = "";
                 continue;
