@@ -12,11 +12,8 @@ namespace MGML {
     Event* Transpiler::event[Events::SIZE] = { nullptr };
     Transpiler::Transpiler() : commentRegex("\\/\\/.*|\\/\\*.*?\\*\\/"), 
     incrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\+\\+|\\+\\+([a-zA-Z_][a-zA-Z0-9_]*)"),
-    decrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)"){
-        // if (Transpiler::event[Events::SIZE] == nullptr)
-        {
-            InitializeEvent();
-        }
+    decrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)") {
+        InitializeEvent();
     }
 
     void Transpiler::Compile(const std::string& inputPath, const std::string& outputPath) {
@@ -26,7 +23,8 @@ namespace MGML {
         if (!inputFile.good()) {
             Log::PrintLine("Couldn't find " + inputPath, LogType::ERROR);
             return;
-        } 
+        }
+
         std::stringstream inputBuffer;
         inputBuffer << inputFile.rdbuf();
         inputBuffer << "\n";
@@ -44,8 +42,8 @@ namespace MGML {
         std::stringstream buffer;
         buffer << "#define Create_0\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/";
         buffer << inputBuffer.str();
+
         std::string modifiedBuffer = buffer.str();
-        
         Format(modifiedBuffer);
 
         for (int i = 0; i < Events::SIZE; i++) {
@@ -53,14 +51,11 @@ namespace MGML {
         }
 
         std::ofstream outputFile(outputPath);
-
         outputFile << modifiedBuffer;
-
         outputFile.close();
 
         const auto endTime = std::chrono::high_resolution_clock::now();
         const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-
         Log::PrintLine(inputPath + " took " + std::to_string(duration.count()) + "ms");
     }
     
@@ -271,8 +266,5 @@ namespace MGML {
         event[Events::BOUNDARY_VIEW_5] = new Event("on_boundary_view_5", "\n#define Other_55\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
         event[Events::BOUNDARY_VIEW_6] = new Event("on_boundary_view_6", "\n#define Other_56\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
         event[Events::BOUNDARY_VIEW_7] = new Event("on_boundary_view_7", "\n#define Other_57\n/*\"/*'/**//* YYD ACTION\nlib_id=1\naction_id=603\napplies_to=self\n*/");
-    }
-    Event* Transpiler::GetEvent() const {
-        return *event;
     }
 }

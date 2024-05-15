@@ -10,13 +10,12 @@ namespace MGML {
     public:
         Transpiler();
         ~Transpiler() = default;
-        Event* GetEvent() const;
-        void InitializeEvent();
         void Format(std::string& code) const;
         int Tokenize(const std::string code);
         int FormatAndTokenize(std::string code);
 
         void Compile(const std::string& inputPath, const std::string& outputPath);
+
         static Event* event[Events::SIZE];
 
         const std::regex commentRegex;
@@ -25,6 +24,7 @@ namespace MGML {
         //std::regex types("\\b(function)\\b");
 
     private:
+        void InitializeEvent();
         std::vector<Token> tokens;
     };
 }

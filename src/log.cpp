@@ -16,7 +16,7 @@ namespace MGML {
                 break;
             
             case LogType::WARNING:
-                std::cout << localTime->tm_hour << ":" << localTime->tm_min << ":" << localTime->tm_sec << " \x1B[33m[WARNING] " << line << "\x1B[0m" << std::endl;
+                std::cout << localTime->tm_hour << ":" << localTime->tm_min << ":" << localTime->tm_sec << " \x1B[33m[WARN] " << line << "\x1B[0m" << std::endl;
                 break;
         }
     }
