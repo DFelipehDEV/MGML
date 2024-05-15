@@ -19,8 +19,9 @@ namespace MGML {
         }
     }
 
-    void Transpiler::Execute(const std::string& inputPath, const std::string& outputPath) {
-        auto startTime = std::chrono::high_resolution_clock::now(); 
+    void Transpiler::Compile(const std::string& inputPath, const std::string& outputPath) {
+        const auto startTime = std::chrono::high_resolution_clock::now(); 
+        
         std::ifstream inputFile(inputPath);
         if (!inputFile.good()) {
             Log::PrintLine("Couldn't find " + inputPath, LogType::ERROR);
@@ -29,10 +30,11 @@ namespace MGML {
         std::stringstream inputBuffer;
         inputBuffer << inputFile.rdbuf();
         inputBuffer << "\n";
+        inputFile.close();
+
         if (FormatAndTokenize(inputBuffer.str()) == 0) { 
             return;
         }
-        std::ofstream outputFile(outputPath);
 
         std::regex actions[Events::SIZE];
         for (int i = 0; i < Events::SIZE; i++) {
@@ -50,12 +52,14 @@ namespace MGML {
             modifiedBuffer = std::regex_replace(modifiedBuffer, actions[i], event[i]->GetDefine());
         }
 
+        std::ofstream outputFile(outputPath);
+
         outputFile << modifiedBuffer;
 
         outputFile.close();
-        inputFile.close();
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+
+        const auto endTime = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
         Log::PrintLine(inputPath + " took " + std::to_string(duration.count()) + "ms");
     }

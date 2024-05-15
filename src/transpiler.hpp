@@ -16,7 +16,7 @@ namespace MGML {
         int Tokenize(const std::string code);
         int FormatAndTokenize(std::string code);
 
-        void Execute(const std::string& inputPath, const std::string& outputPath);
+        void Compile(const std::string& inputPath, const std::string& outputPath);
         static Event* event[Events::SIZE];
 
         const std::regex commentRegex;
