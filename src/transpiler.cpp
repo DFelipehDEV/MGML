@@ -7,12 +7,14 @@
 #include "transpiler.hpp"
 #include "language.hpp"
 #include "log.hpp"
+#include "token.hpp"
 
 namespace MGML {    
     Event* Transpiler::event[Events::SIZE] = { nullptr };
     Transpiler::Transpiler() : commentRegex("\\/\\/.*|\\/\\*.*?\\*\\/"), 
     incrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\+\\+|\\+\\+([a-zA-Z_][a-zA-Z0-9_]*)"),
-    decrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)") {
+    decrementRegex("([a-zA-Z_][a-zA-Z0-9_]*)\\-\\-|\\-\\-([a-zA-Z_][a-zA-Z0-9_]*)"),
+    varRegex(R"(var\s+(\w+)\s*=\s*([^,]+)(?:\s*,\s*(\w+)\s*=\s*([^,]+))*)") {
         InitializeEvent();
     }
 
@@ -63,15 +65,29 @@ namespace MGML {
         code = std::regex_replace(code, commentRegex, "");
         code = std::regex_replace(code, incrementRegex, "$1+=1");
         code = std::regex_replace(code, decrementRegex, "$1-=1");
+        std::smatch match;
+
+        while (std::regex_search(code, match, varRegex)) {
+            std::stringstream result;
+            result << "var " << match[1] << "; " << match[1] << " = " << match[2] << "; ";
+            
+            for (size_t i = 3; i < match.size(); i += 2) {
+                if (match[i].matched) {
+                    result << "var " << match[i] << "; " << match[i] << " = " << match[i + 1] << "; ";
+                }
+            }
+
+            code = match.prefix().str() + result.str() + match.suffix().str();
+        }
     }
 
-    int Transpiler::Tokenize(const std::string code) {
+    int Transpiler::Tokenize(const std::string& code) {
         std::string word = "";
         int currentLine = 1;
 
         bool insideString = false;
         Token previousToken;
-        for (int index = 0; index < code.size(); index++) {
+        for (uint32_t index = 0; index < code.size(); index++) {
             if (std::isspace(code[index]) && !insideString) {
                 if (code[index] == '\n') {
                     currentLine++;
@@ -118,8 +134,70 @@ namespace MGML {
                 }
             }
 
-            if (word == "(" || word == ")") {
-                previousToken = { (word == "(") ? TokenType::LPAREN : TokenType::RPAREN };
+            if (word == "+" && peek != '=') {
+                if (previousToken.type != TokenType::IDENTIFIER && previousToken.type != TokenType::NUMBER && previousToken.type != TokenType::RPAREN) {
+                    Log::PrintLine("+ is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                    //return 0;
+                }
+                previousToken = { TokenType::ADD, "+" };
+                tokens.push_back(previousToken);
+                word = "";
+                continue;
+            }
+
+            if (word == "-" && peek != '=') {
+                if (previousToken.type != TokenType::IDENTIFIER && previousToken.type != TokenType::NUMBER && previousToken.type != TokenType::RPAREN) {
+                    Log::PrintLine("- is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                    //return 0;
+                }
+                previousToken = { TokenType::SUBTRACT , "-" };
+                tokens.push_back(previousToken);
+                word = "";
+                continue;
+            }
+
+            if (word == "*" && peek != '=') {
+                if (previousToken.type != TokenType::IDENTIFIER && previousToken.type != TokenType::NUMBER && previousToken.type != TokenType::RPAREN) {
+                    Log::PrintLine("* is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                    //return 0;
+                }
+                previousToken = { TokenType::MULTIPLY , "*" };
+                tokens.push_back(previousToken);
+                word = "";
+                continue;
+            }
+
+            if (word == "/" && peek != '=') {
+                if (previousToken.type != TokenType::IDENTIFIER && previousToken.type != TokenType::NUMBER && previousToken.type != TokenType::RPAREN) {
+                    Log::PrintLine("/ is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                    //return 0;
+                }
+                previousToken = { TokenType::DIVIDE , "/"};
+                tokens.push_back(previousToken);
+                word = "";
+                continue;
+            }
+
+            if (word == "=" && peek != '=') {
+                if (previousToken.type != TokenType::IDENTIFIER && previousToken.type != TokenType::ARRAY) {
+                    Log::PrintLine("= is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                    //return 0;
+                }
+                previousToken = { TokenType::ASSIGNMENT , "="};
+                tokens.push_back(previousToken);
+                word = "";
+                continue;
+            }
+
+            if (word == "(") {
+                previousToken = { TokenType::LPAREN };
+                tokens.push_back(previousToken);
+                word = "";
+                continue;
+            }
+
+            if (word == ")") {
+                previousToken = { TokenType::RPAREN };
                 tokens.push_back(previousToken);
                 word = "";
                 continue;
@@ -140,10 +218,21 @@ namespace MGML {
             }
 
             if ((std::isalpha(word[0])) && (!std::isalnum(peek)) && peek != '_') {
-                TokenType type = (Language::IsKeyword(word)) ? TokenType::KEYWORD : TokenType::IDENTIFIER;
-                previousToken = { type, word };
-                tokens.push_back(previousToken);
-                word = "";
+                if (peek == '[') {
+                    word += code[++index];
+                    while (index + 1 < code.size() && code[index + 1] != ']') {
+                        word += code[++index];
+                    }
+                    word += code[++index];
+                    previousToken = { TokenType::ARRAY, word };
+                    tokens.push_back(previousToken);
+                    word = "";
+                } else {
+                    TokenType type = (Language::IsKeyword(word)) ? TokenType::KEYWORD : TokenType::IDENTIFIER;
+                    previousToken = { type, word };
+                    tokens.push_back(previousToken);
+                    word = "";
+                }
                 continue;
             }
 
@@ -183,20 +272,22 @@ namespace MGML {
             }
 
             if (word == ";" || word == "\n") {
-                switch (previousToken.type) {
-                    case TokenType::OPERATOR:
-                        Log::PrintLine(previousToken.value + " is not valid at line " + std::to_string(currentLine), LogType::ERROR);
-                        return 0;
-                        break;
+                if (previousToken.type != TokenType::KEYWORD && previousToken.type != TokenType::ARRAY && previousToken.type != TokenType::IDENTIFIER && previousToken.type != TokenType::RPAREN && previousToken.type != TokenType::NUMBER && previousToken.type != TokenType::STRING) {
+                    Log::PrintLine(previousToken.value + " is not valid at line " + std::to_string(currentLine), LogType::ERROR);
+                    //return 0;
                 }
-                previousToken = { TokenType::EOL };
+                previousToken = { TokenType::EOL , "EOL"};
                 tokens.push_back(previousToken);
                 word = "";
                 continue;
             }
         }
 
-        tokens.push_back({ TokenType::EOL });
+        for (Token token : tokens) {
+            Log::PrintLine(std::to_string(token.type) + " " + token.value);
+        }
+
+        tokens.push_back({ TokenType::EOL , "EOL"});
         return 1;
     }
 

@@ -22,7 +22,7 @@ namespace MGML {
     };
 
     const std::unordered_set<std::string> Language::operators = {
-        "==", "!=", "<=", ">=", "&&", "<", ">", "||", "+", "-", "*", "/", "=", "!", "[", "]",
+        "==", "!=", "<=", ">=", "&&", "<", ">", "||", "!",
     };
 
     bool Language::IsKeyword(const std::string& str) {

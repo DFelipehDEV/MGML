@@ -4,3 +4,6 @@ number = -1.04;
 text = "uwu";
 homing[0] = true;
 homing[1] = false;
+if (bool == true) {
+    return 0;
+}

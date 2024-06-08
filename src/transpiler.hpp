@@ -11,7 +11,7 @@ namespace MGML {
         Transpiler();
         ~Transpiler() = default;
         void Format(std::string& code) const;
-        int Tokenize(const std::string code);
+        int Tokenize(const std::string& code);
         int FormatAndTokenize(std::string code);
 
         void Compile(const std::string& inputPath, const std::string& outputPath);
@@ -21,6 +21,7 @@ namespace MGML {
         const std::regex commentRegex;
         const std::regex incrementRegex;
         const std::regex decrementRegex;
+        const std::regex varRegex;
         //std::regex types("\\b(function)\\b");
 
     private:
